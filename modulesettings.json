@@ -13,7 +13,7 @@
         "BasedOnUrl": "https://github.com/ankandrew/fast-alpr"
       },
       "LaunchSettings": {
-        "AutoStart": false,
+        "AutoStart": true,
         "FilePath": "alprfast_adapter.py",
         "Runtime": "python3.10",
         "RuntimeLocation": "Local",
@@ -32,7 +32,12 @@
         "OBJECT_DETECTION_URL": "http://localhost:32168/v1/vision/detection",
         "MAX_VEHICLE_CROPS": "3",
         "ENABLE_VOTING": "True",
-        "VOTE_WINDOW_SECS": "8.0"
+        "VOTE_WINDOW_SECS": "8.0",
+        "SAVE_CAPTURES": "True",
+        "CAPTURE_DIR": "/app/modules/ALPRFast/captures",
+        "NIGHT_ENHANCE": "False",
+        "NIGHT_LUMA_THRESH": "80",
+        "CAPTURE_MAX": "8000"
       },
       "GpuOptions": {
         "InstallGPU": true,

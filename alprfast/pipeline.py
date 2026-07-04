@@ -82,6 +82,30 @@ class ALPRFast:
         self.voter = VotingBuffer(window_secs=float(_env('VOTE_WINDOW_SECS', '8.0')))
         self.inference_device = 'GPU' if use_cuda else 'CPU'
 
+        # --- low-light enhancement: only kicks in on dark/night crops, so daylight
+        #     reads pass through unchanged (mean-luma gate) ---
+        self.night_enhance = _env('NIGHT_ENHANCE', 'False').lower() == 'true'
+        self.night_luma_thresh = float(_env('NIGHT_LUMA_THRESH', '80'))
+        self.night_denoise = _env('NIGHT_DENOISE', 'True').lower() == 'true'
+        self._clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+
+        # --- capture harness: save processed frames + reads to build a tuning corpus ---
+        self.save_captures = _env('SAVE_CAPTURES', 'False').lower() == 'true'
+        self.capture_dir = _env('CAPTURE_DIR', '/app/modules/ALPRFast/captures')
+        self.capture_max = int(_env('CAPTURE_MAX', '8000'))
+        self._cap_n = 0
+        self._cap_csv = os.path.join(self.capture_dir, 'log.csv')
+        if self.save_captures:
+            try:
+                os.makedirs(os.path.join(self.capture_dir, 'frames'), exist_ok=True)
+                if not os.path.exists(self._cap_csv):
+                    with open(self._cap_csv, 'w') as f:
+                        f.write('iso_ts,seq,w,h,mean_luma,n_reads,n_valid,'
+                                'best_text,best_conf,best_votes,ms,frame_file\n')
+            except Exception as e:
+                print(f"ALPRFast capture init failed: {e}")
+                self.save_captures = False
+
     # ---- OCR + gating -----------------------------------------------------
     def _upscale(self, img):
         h, w = img.shape[:2]
@@ -92,8 +116,25 @@ class ALPRFast:
             img = cv2.resize(img, (max(1, int(w * s)), self.sr_target_h), interpolation=cv2.INTER_LANCZOS4)
         return img
 
+    def _enhance(self, img):
+        """Dark/night crops only: CLAHE local-contrast (+ optional denoise). Bright
+        daytime crops pass through untouched (mean-luma gate) so daylight is unaffected."""
+        if not self.night_enhance or img is None or img.size == 0:
+            return img
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if img.ndim == 3 else img
+        if float(gray.mean()) >= self.night_luma_thresh:
+            return img
+        try:
+            eq = self._clahe.apply(gray)
+            if self.night_denoise:
+                eq = cv2.fastNlMeansDenoising(eq, None, h=7,
+                                              templateWindowSize=7, searchWindowSize=21)
+            return cv2.cvtColor(eq, cv2.COLOR_GRAY2BGR)
+        except Exception:
+            return img
+
     def _read(self, plate_img):
-        preds = self.ocr.run(self._upscale(plate_img), return_confidence=True)
+        preds = self.ocr.run(self._upscale(self._enhance(plate_img)), return_confidence=True)
         if not preds:
             return None
         p = preds[0]
@@ -174,4 +215,30 @@ class ALPRFast:
                           'x_min': b[0], 'y_min': b[1], 'x_max': b[2], 'y_max': b[3],
                           'votes': nvotes})
         ms = int((time.perf_counter() - t0) * 1000)
+        if self.save_captures:
+            try:
+                self._save_capture(img_bgr, reads, valid, preds, ms)
+            except Exception as e:
+                print(f"ALPRFast capture failed: {e}")
         return preds, ms
+
+    # ---- capture harness: build a night-tuning corpus ---------------------
+    def _save_capture(self, img_bgr, reads, valid, preds, ms):
+        if self._cap_n >= self.capture_max:
+            return
+        h, w = img_bgr.shape[:2]
+        gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY) if img_bgr.ndim == 3 else img_bgr
+        luma = float(gray.mean())
+        ts = time.strftime('%Y%m%d_%H%M%S')
+        seq = self._cap_n
+        fname = f'frames/{ts}_{seq:06d}.jpg'
+        cv2.imwrite(os.path.join(self.capture_dir, fname), img_bgr,
+                    [int(cv2.IMWRITE_JPEG_QUALITY), 90])
+        best = preds[0] if preds else {}
+        row = [time.strftime('%Y-%m-%dT%H:%M:%S'), str(seq), str(w), str(h),
+               f'{luma:.1f}', str(len(reads)), str(len(valid)),
+               str(best.get('label', '')), str(best.get('confidence', '')),
+               str(best.get('votes', '')), str(ms), fname]
+        with open(self._cap_csv, 'a') as f:
+            f.write(','.join(row) + '\n')
+        self._cap_n += 1
