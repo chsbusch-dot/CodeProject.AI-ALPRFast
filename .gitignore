@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+bin/
+test/*.jpg
+*.mp4
+.DS_Store
