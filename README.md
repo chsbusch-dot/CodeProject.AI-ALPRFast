@@ -31,6 +31,24 @@ extra steps that make a wide overview camera usable as an opportunistic plate re
 > I've also opened a [Linux/CUDA PR](https://github.com/MikeLud/CodeProject.AI-ALPR-YOLO11/pull/2)
 > against his YOLO11 ALPR to help close that gap upstream.
 
+## Which CodeProject.AI ALPR module should I use?
+
+ALPRFast is one of several ALPR options for CodeProject.AI — and **not always the right one.**
+Pick by platform and GPU:
+
+| Your setup | Use | Notes |
+|---|---|---|
+| **Windows** | MikeLud's [**ALPR (YOLO11)**](https://github.com/MikeLud/MikeLud-CodeProject.AI-Modules) | The strong choice on Windows (DirectML GPU). |
+| **Simplest, any platform** | stock **License Plate Reader** (PaddleOCR) | One-click from the dashboard (CPU on Linux — for GPU, see the CUDA fork below). |
+| **Linux + NVIDIA — PaddleOCR on GPU** | [PaddleOCR **CUDA 12** fork](https://github.com/codeproject/CodeProject.AI-ALPR/pull/25) | GPU-enables the stock PaddleOCR reader on Linux. |
+| **Linux + NVIDIA — YOLO11 on GPU** | [**Linux/CUDA YOLO11** fork](https://github.com/MikeLud/CodeProject.AI-ALPR-YOLO11/pull/2) | GPU-enables MikeLud's Windows-only YOLO11 module on Linux. |
+| **Linux + NVIDIA — wide 4K CCTV** | **ALPRFast** (this repo) | GPU-native; the crop-first + voting stack below. |
+
+**On Linux + NVIDIA, all three readers now have a CUDA/GPU path** — CodeProject.AI ALPR was
+effectively Windows-GPU-only before; the two upstream PRs above (PaddleOCR CUDA 12, YOLO11
+`onnxruntime-gpu`) plus this module close that gap. Step-by-step for every option:
+[`docs/INSTALL.md`](docs/INSTALL.md).
+
 ## Features — the accuracy stack
 
 Beyond vanilla `fast-alpr`, ALPRFast adds:

@@ -126,10 +126,12 @@ Make sure an **object-detection** module is also installed (prerequisite #2).
   PaddlePaddle-GPU installs cleanly essentially only on **Windows**. On **Windows + NVIDIA**
   you can enable GPU for it in the module's settings (the dashboard's GPU / half-precision
   controls, backed by `GpuOptions.EnableGPU` / `HalfPrecision`).
-- On **Linux + NVIDIA**, the stock PaddleOCR module runs OCR on **CPU** in its default
-  form — upstream does not ship a working Linux/CUDA PaddlePaddle path. If you need the
-  GPU on Linux, that is exactly what **option C (ALPRFast)** — or the Linux/CUDA PaddleOCR
-  fork — exists for. Don't expect the stock module to use an NVIDIA GPU on Linux.
+- On **Linux + NVIDIA**, the **stock** (one-click) PaddleOCR module runs OCR on **CPU** —
+  upstream doesn't ship a working Linux/CUDA PaddlePaddle path. To run PaddleOCR **on the
+  GPU on Linux**, side-load the
+  **[PaddleOCR CUDA-12 fork](https://github.com/codeproject/CodeProject.AI-ALPR/pull/25)**
+  (a contributed patch that GPU-enables it on Linux/CUDA 12); or use **option C (ALPRFast)**.
+  Just don't expect the *stock* one-click module to use an NVIDIA GPU on Linux without that fork.
 
 ### A.3 Verify it's serving `/v1/vision/alpr`
 
