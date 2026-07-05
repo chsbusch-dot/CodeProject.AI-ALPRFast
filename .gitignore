@@ -4,3 +4,6 @@ bin/
 test/*.jpg
 *.mp4
 .DS_Store
+
+# capture harness output (SAVE_CAPTURES) — real plate frames = PII, never commit
+captures/
