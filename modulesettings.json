@@ -1,0 +1,75 @@
+{
+  "Modules": {
+    "ALPRFast": {
+      "Name": "ALPRFast — fast-alpr + super-res + voting",
+      "Version": "1.0.0",
+      "PublishingInfo": {
+        "Description": "Automatic License Plate Recognition for wide 4K CCTV: fast-alpr (YOLOv9 plate detector + fast-plate-ocr CCT), with crop-first vehicle detection, super-resolution, US/CA format+confidence gating, and live multi-frame voting.",
+        "Category": "Computer Vision",
+        "Stack": "Python, ONNX, onnxruntime",
+        "License": "MIT",
+        "Author": "chsbusch-dot",
+        "BasedOn": "fast-alpr (ankandrew)",
+        "BasedOnUrl": "https://github.com/ankandrew/fast-alpr"
+      },
+      "LaunchSettings": {
+        "AutoStart": true,
+        "FilePath": "alprfast_adapter.py",
+        "Runtime": "python3.10",
+        "RuntimeLocation": "Local",
+        "PostStartPauseSecs": 1,
+        "Queue": "alpr_queue",
+        "Parallelism": 0
+      },
+      "EnvironmentVariables": {
+        "USE_CUDA": "True",
+        "DETECTOR_MODEL": "yolo-v9-t-640-license-plate-end2end",
+        "OCR_MODEL": "cct-s-v2-global-model",
+        "PLATE_DETECTOR_CONFIDENCE": "0.35",
+        "MIN_CHAR_CONFIDENCE": "0.55",
+        "SR_TARGET_HEIGHT": "64",
+        "ENABLE_VEHICLE_CROP_FALLBACK": "True",
+        "OBJECT_DETECTION_URL": "http://localhost:32168/v1/vision/detection",
+        "MAX_VEHICLE_CROPS": "3",
+        "ENABLE_VOTING": "True",
+        "VOTE_WINDOW_SECS": "8.0",
+        "SAVE_CAPTURES": "True",
+        "CAPTURE_DIR": "/app/modules/ALPRFast/captures",
+        "NIGHT_ENHANCE": "False",
+        "NIGHT_LUMA_THRESH": "80",
+        "CAPTURE_MAX": "8000"
+      },
+      "GpuOptions": {
+        "InstallGPU": true,
+        "EnableGPU": true,
+        "HalfPrecision": "enable"
+      },
+      "InstallOptions": {
+        "Platforms": [ "linux", "linux-arm64" ],
+        "ModuleReleases": [
+          { "ModuleVersion": "1.0.0", "ServerVersionRange": [ "2.9.0", "" ], "ReleaseDate": "2026-07-03", "ReleaseNotes": "Initial release", "Importance": "Major" }
+        ]
+      },
+      "RouteMaps": [
+        {
+          "Name": "ALPRFast Detection",
+          "Route": "vision/alpr",
+          "Method": "POST",
+          "Command": "detect",
+          "Description": "Detects and reads license plates in an image.",
+          "Inputs": [
+            { "Name": "image", "Type": "File", "Description": "The image to analyse." },
+            { "Name": "min_confidence", "Type": "Float", "Description": "Minimum confidence (0-1).", "DefaultValue": 0.4, "MinValue": 0.0, "MaxValue": 1.0 }
+          ],
+          "Outputs": [
+            { "Name": "success", "Type": "Boolean", "Description": "True if successful." },
+            { "Name": "predictions", "Type": "Object[]", "Description": "Detected plates: label (plate), confidence, bounding box, votes." },
+            { "Name": "count", "Type": "Integer", "Description": "Number of plates found." },
+            { "Name": "inferenceMs", "Type": "Integer", "Description": "Inference time (ms)." },
+            { "Name": "processMs", "Type": "Integer", "Description": "Total processing time (ms)." }
+          ]
+        }
+      ]
+    }
+  }
+}

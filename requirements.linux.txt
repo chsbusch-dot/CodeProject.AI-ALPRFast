@@ -1,0 +1,10 @@
+#! Python3.10
+
+numpy>=1.23.0,<2.3            # scientific computing
+opencv-python>=4.6.0          # image handling
+requests                      # crop-first calls the object-detection module over HTTP
+fast-alpr[onnx-gpu]           # YOLOv9 plate detector (open-image-models) + fast-plate-ocr CCT
+onnxruntime-gpu[cuda,cudnn]==1.23.0   # pin ORT + bundle CUDA 12 runtime + cuDNN 9 into the venv
+CodeProject-AI-SDK            # CodeProject.AI module SDK
+
+# last line empty.
