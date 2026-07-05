@@ -176,6 +176,19 @@ day off a wide 4K Hikvision ColorVu carport/street overview camera, at roughly
 - **Night/IR is hard, and tuning is deployment-specific.** The night branch and the
   capture harness exist to help you tune for *your* scene; there's no universal setting.
 
+## Related upstream contributions
+
+Fixes I've contributed to the *other* CodeProject.AI ALPR modules while getting ALPR
+working on Linux/GPU — all open PRs to their upstreams. Use those modules directly if they
+suit your setup better than this one:
+
+- **[Linux/CUDA support for the YOLO11 ALPR](https://github.com/MikeLud/CodeProject.AI-ALPR-YOLO11/pull/2)**
+  — so MikeLud's (Windows-only) YOLO11 module can run on Linux/NVIDIA.
+- **[PaddleOCR GPU on Linux / CUDA 12](https://github.com/codeproject/CodeProject.AI-ALPR/pull/25)**
+  — a GPU path for the stock PaddleOCR "License Plate Reader" on Linux.
+- **[Vehicle-crop fallback](https://github.com/codeproject/CodeProject.AI-ALPR/pull/26)**
+  — read plates in wide / high-resolution scenes; ALPRFast's crop-first step shares this idea.
+
 ## Credits
 
 The detection and OCR core is [**fast-alpr**](https://github.com/ankandrew/fast-alpr) by
